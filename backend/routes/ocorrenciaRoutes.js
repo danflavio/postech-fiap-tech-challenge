@@ -7,6 +7,7 @@ import {
   avaliarOcorrencia,
 } from '../controllers/ocorrenciaController.js';
 import { adicionarComentario } from '../controllers/comentarioController.js';
+import { obterIndicadores } from '../controllers/indicadoresController.js';
 import { authenticateToken } from '../middlewares/authMiddleware.js';
 import { authorizePerfil } from '../middlewares/authorizePerfil.js';
 
@@ -17,6 +18,10 @@ router.use(authenticateToken);
 
 router.post('/', criarOcorrencia);
 router.get('/', listarOcorrencias);
+
+// Indicadores (somente gestor) — deve vir ANTES de '/:id'
+router.get('/indicadores', authorizePerfil('gestor'), obterIndicadores);
+
 router.get('/:id', obterOcorrenciaPorId);
 router.patch('/:id/status', authorizePerfil('gestor'), atualizarStatus);
 
