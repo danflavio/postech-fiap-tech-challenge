@@ -12,12 +12,22 @@ export const adicionarComentario = async (req, res) => {
     }
 
     // Verifica se a ocorrência existe
-    const ocorrenciaExists = await pool.query('SELECT id FROM ocorrencias WHERE id = $1', [
-      ocorrencia_id,
-    ]);
+    const ocorrenciaExists = await pool.query(
+      'SELECT id, solicitante_id FROM ocorrencias WHERE id = $1',
+      [ocorrencia_id],
+    );
 
     if (ocorrenciaExists.rows.length === 0) {
       return res.status(404).json({ message: 'Ocorrência não encontrada.' });
+    }
+
+    const ocorrencia = ocorrenciaExists.rows[0];
+
+    if (
+      req.user.perfil === 'solicitante' &&
+      ocorrencia.solicitante_id !== req.user.id
+    ) {
+      return res.status(403).json({ message: 'Acesso negado a esta ocorrência.' });
     }
 
     // Insere o comentário no banco

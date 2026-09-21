@@ -107,6 +107,15 @@ export const obterOcorrenciaPorId = async (req, res) => {
       return res.status(404).json({ message: 'Ocorrência não encontrada.' });
     }
 
+    const ocorrencia = ocorrenciaQuery.rows[0];
+
+    if (
+      req.user.perfil === 'solicitante' &&
+      ocorrencia.solicitante_id !== req.user.id
+    ) {
+      return res.status(403).json({ message: 'Acesso negado a esta ocorrência.' });
+    }
+
     // Busca histórico de alterações de status
     const historicoQuery = await pool.query(
       `SELECT h.*, u.nome as usuario_nome
@@ -128,7 +137,7 @@ export const obterOcorrenciaPorId = async (req, res) => {
     );
 
     res.json({
-      ...ocorrenciaQuery.rows[0],
+      ...ocorrencia,
       historico: historicoQuery.rows,
       comentarios: comentariosQuery.rows,
     });

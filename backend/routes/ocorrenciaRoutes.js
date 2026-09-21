@@ -7,6 +7,7 @@ import {
 } from '../controllers/ocorrenciaController.js';
 import { adicionarComentario } from '../controllers/comentarioController.js';
 import { authenticateToken } from '../middlewares/authMiddleware.js';
+import { authorizePerfil } from '../middlewares/authorizePerfil.js';
 
 const router = express.Router();
 
@@ -16,7 +17,7 @@ router.use(authenticateToken);
 router.post('/', criarOcorrencia);
 router.get('/', listarOcorrencias);
 router.get('/:id', obterOcorrenciaPorId);
-router.patch('/:id/status', atualizarStatus);
+router.patch('/:id/status', authorizePerfil('gestor'), atualizarStatus);
 
 // Rota de Comentários
 router.post('/:id/comentarios', adicionarComentario);
