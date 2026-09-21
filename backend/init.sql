@@ -47,6 +47,9 @@ CREATE TABLE IF NOT EXISTS ocorrencias (
     solicitante_id INT NOT NULL REFERENCES usuarios(id),
     gestor_id INT REFERENCES usuarios(id),
     solucao_aplicada TEXT,
+    avaliacao_nota SMALLINT CHECK (avaliacao_nota BETWEEN 1 AND 5),
+    avaliacao_comentario TEXT,
+    avaliada_em TIMESTAMP,
     criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

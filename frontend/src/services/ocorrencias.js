@@ -11,3 +11,6 @@ export const atualizarStatus = (id, data) =>
 
 export const adicionarComentario = (id, texto) =>
   api.post(`/ocorrencias/${id}/comentarios`, { texto });
+
+export const avaliarOcorrencia = (id, data) =>
+  api.post(`/ocorrencias/${id}/avaliacao`, data);

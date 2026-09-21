@@ -9,11 +9,13 @@ import {
   MessageSquare,
   CheckCircle2,
   Wrench,
+  Star,
 } from 'lucide-react';
 import {
   obterOcorrencia,
   adicionarComentario,
   atualizarStatus,
+  avaliarOcorrencia,
 } from '../services/ocorrencias';
 import { useAuth } from '../hooks/useAuth';
 
@@ -40,6 +42,10 @@ export const DetalheOcorrencia = () => {
     observacao: '',
     solucao_aplicada: '',
   });
+  const [notaAvaliacao, setNotaAvaliacao] = useState(0);
+  const [hoverNota, setHoverNota] = useState(0);
+  const [comentarioAvaliacao, setComentarioAvaliacao] = useState('');
+  const [avaliando, setAvaliando] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -115,8 +121,38 @@ export const DetalheOcorrencia = () => {
     }
   };
 
+  const handleAvaliar = async (e) => {
+    e.preventDefault();
+    if (notaAvaliacao < 1) {
+      setError('Selecione uma nota de 1 a 5 estrelas.');
+      return;
+    }
+
+    setAvaliando(true);
+
+    try {
+      await avaliarOcorrencia(id, {
+        nota: notaAvaliacao,
+        comentario: comentarioAvaliacao,
+      });
+      setError('');
+      setReloadKey((n) => n + 1);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Não foi possível registrar a avaliação.');
+    } finally {
+      setAvaliando(false);
+    }
+  };
+
   if (loading) return <p className="muted">Carregando...</p>;
   if (error && !ocorrencia) return <p className="error">{error}</p>;
+
+  // Regras de exibição do bloco de avaliação
+  const jaAvaliada = Boolean(ocorrencia.avaliada_em);
+  const ehSolicitanteDono =
+    user.perfil === 'solicitante' && ocorrencia.solicitante_id === user.id;
+  const podeAvaliar =
+    ehSolicitanteDono && ocorrencia.status === 'Resolvida' && !jaAvaliada;
 
   return (
     <div className="detalhe">
@@ -176,6 +212,82 @@ export const DetalheOcorrencia = () => {
           </h3>
           <p>{ocorrencia.solucao_aplicada}</p>
         </div>
+      )}
+
+      {jaAvaliada && (
+        <div className="avaliacao avaliacao-registrada">
+          <h3>
+            <Star size={16} />
+            Avaliação da resolução
+          </h3>
+          <div className="estrelas">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <Star
+                key={n}
+                size={20}
+                fill={n <= ocorrencia.avaliacao_nota ? '#f5b301' : 'none'}
+                color="#f5b301"
+              />
+            ))}
+            <span className="nota-texto">{ocorrencia.avaliacao_nota} / 5</span>
+          </div>
+          {ocorrencia.avaliacao_comentario && (
+            <p className="avaliacao-comentario">{ocorrencia.avaliacao_comentario}</p>
+          )}
+          <small>
+            Avaliada em {new Date(ocorrencia.avaliada_em).toLocaleString('pt-BR')}
+          </small>
+        </div>
+      )}
+
+      {podeAvaliar && (
+        <section className="secao avaliacao">
+          <h2>
+            <Star size={18} />
+            Avaliar a resolução
+          </h2>
+          <p className="muted">
+            Sua ocorrência foi resolvida. Como você avalia o atendimento?
+          </p>
+
+          <form onSubmit={handleAvaliar}>
+            <div
+              className="estrelas estrelas-input"
+              onMouseLeave={() => setHoverNota(0)}
+            >
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button
+                  type="button"
+                  key={n}
+                  className="estrela-btn"
+                  onClick={() => setNotaAvaliacao(n)}
+                  onMouseEnter={() => setHoverNota(n)}
+                  aria-label={`${n} estrela${n > 1 ? 's' : ''}`}
+                >
+                  <Star
+                    size={28}
+                    fill={n <= (hoverNota || notaAvaliacao) ? '#f5b301' : 'none'}
+                    color="#f5b301"
+                  />
+                </button>
+              ))}
+            </div>
+
+            <label>
+              Comentário (opcional)
+              <textarea
+                rows={2}
+                placeholder="Conte como foi a resolução..."
+                value={comentarioAvaliacao}
+                onChange={(e) => setComentarioAvaliacao(e.target.value)}
+              />
+            </label>
+
+            <button type="submit" className="btn-primary" disabled={avaliando}>
+              {avaliando ? 'Enviando...' : 'Enviar avaliação'}
+            </button>
+          </form>
+        </section>
       )}
 
       {isGestor && (

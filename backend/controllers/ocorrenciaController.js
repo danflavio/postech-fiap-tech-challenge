@@ -194,3 +194,64 @@ export const atualizarStatus = async (req, res) => {
     res.status(500).json({ message: 'Erro interno no servidor.' });
   }
 };
+
+// 5. Avaliar a Resolução (Solicitante dono, apenas quando Resolvida, uma única vez)
+export const avaliarOcorrencia = async (req, res) => {
+  const { id } = req.params;
+  const { nota, comentario } = req.body;
+  const usuario_id = req.user.id;
+
+  try {
+    // 1. Valida a nota (inteiro de 1 a 5)
+    const notaInt = Number(nota);
+    if (!Number.isInteger(notaInt) || notaInt < 1 || notaInt > 5) {
+      return res.status(400).json({ message: 'A nota deve ser um número inteiro entre 1 e 5.' });
+    }
+
+    // 2. Verifica se a ocorrência existe
+    const ocorrenciaQuery = await pool.query(
+      'SELECT solicitante_id, status, avaliada_em FROM ocorrencias WHERE id = $1',
+      [id],
+    );
+
+    if (ocorrenciaQuery.rows.length === 0) {
+      return res.status(404).json({ message: 'Ocorrência não encontrada.' });
+    }
+
+    const ocorrencia = ocorrenciaQuery.rows[0];
+
+    // 3. Apenas o solicitante dono pode avaliar
+    if (ocorrencia.solicitante_id !== usuario_id) {
+      return res.status(403).json({ message: 'Apenas o solicitante que registrou a ocorrência pode avaliá-la.' });
+    }
+
+    // 4. Só é possível avaliar ocorrências Resolvidas
+    if (ocorrencia.status !== 'Resolvida') {
+      return res.status(400).json({ message: 'Só é possível avaliar ocorrências com status "Resolvida".' });
+    }
+
+    // 5. Impede reavaliação (avaliação única)
+    if (ocorrencia.avaliada_em) {
+      return res.status(409).json({ message: 'Esta ocorrência já foi avaliada.' });
+    }
+
+    // Persiste a avaliação
+    const updateResult = await pool.query(
+      `UPDATE ocorrencias
+       SET avaliacao_nota = $1,
+           avaliacao_comentario = $2,
+           avaliada_em = CURRENT_TIMESTAMP
+       WHERE id = $3
+       RETURNING *`,
+      [notaInt, comentario || null, id],
+    );
+
+    res.json({
+      message: 'Avaliação registrada com sucesso!',
+      ocorrencia: updateResult.rows[0],
+    });
+  } catch (error) {
+    console.error('Erro ao avaliar ocorrência:', error);
+    res.status(500).json({ message: 'Erro interno no servidor.' });
+  }
+};

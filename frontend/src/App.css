@@ -526,3 +526,78 @@
 .painel-gestor button {
   align-self: flex-start;
 }
+
+
+/* Avaliação da resolução */
+.avaliacao {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-left: 3px solid #f5b301;
+  border-radius: 8px;
+  background: var(--code-bg);
+}
+
+.avaliacao h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 6px;
+  font-size: 15px;
+  color: var(--text-h);
+}
+
+.avaliacao form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.avaliacao label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--text-h);
+}
+
+.avaliacao textarea {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text-h);
+  font-size: 15px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.avaliacao button {
+  align-self: flex-start;
+}
+
+.estrelas {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.estrelas .nota-texto {
+  margin-left: 8px;
+  font-size: 14px;
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+.estrelas-input .estrela-btn {
+  background: none;
+  border: none;
+  padding: 2px;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.avaliacao-comentario {
+  margin: 10px 0 4px;
+  font-style: italic;
+}
