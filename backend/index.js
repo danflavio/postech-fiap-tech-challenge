@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import './db.js';
 import authRoutes from './routes/authRoutes.js';
+import ocorrenciaRoutes from './routes/ocorrenciaRoutes.js';
 
 dotenv.config({ path: '../.env' });
 
@@ -14,6 +15,9 @@ app.use(express.json());
 
 // Registra as rotas de autenticação
 app.use('/auth', authRoutes);
+
+// Rotas de Ocorrências (Protegidas) 
+app.use('/ocorrencias', ocorrenciaRoutes);
 
 app.get('/', (req, res) => {
     res.json({

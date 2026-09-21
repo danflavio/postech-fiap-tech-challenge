@@ -72,7 +72,7 @@ export const login = async (req, res) => {
       });
     }
 
-    const user = result.rows;
+    const user = result.rows[0];
 
     // Compara a senha informada com a senha criptografada do banco
     const isPasswordValid = await bcrypt.compare(senha, user.senha);
@@ -91,7 +91,7 @@ export const login = async (req, res) => {
         email: user.email,
         perfil: user.perfil,
       },
-      process.env.JWT_SECRET || "chave_secreta_padrao",
+      process.env.JWT_SECRET,
       {
         expiresIn: "1d",
       },
