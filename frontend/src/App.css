@@ -527,6 +527,119 @@
   align-self: flex-start;
 }
 
+.nav-links {
+  display: flex;
+  gap: 8px;
+}
+
+.nav-links a {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.nav-links a.active {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.indicadores {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.indicadores-top {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.indicador-destaque {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.indicador-destaque strong {
+  font-size: 34px;
+  color: var(--text-h);
+}
+
+.indicador-destaque strong small {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text);
+}
+
+.indicadores-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.indicador-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.indicador-card strong {
+  font-size: 26px;
+}
+
+.barras {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.barras li {
+  display: grid;
+  grid-template-columns: 140px 1fr 40px;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.barra-label {
+  color: var(--text-h);
+}
+
+.barra-trilha {
+  height: 12px;
+  border-radius: 999px;
+  background: var(--code-bg);
+  overflow: hidden;
+}
+
+.barra-preenchida {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.barra-valor {
+  text-align: right;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
 
 /* Avaliação da resolução */
 .avaliacao {

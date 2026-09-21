@@ -4,6 +4,7 @@ import { Cadastro } from './pages/Cadastro';
 import { Dashboard } from './pages/Dashboard';
 import { NovaOcorrencia } from './pages/NovaOcorrencia';
 import { DetalheOcorrencia } from './pages/DetalheOcorrencia';
+import { Indicadores } from './pages/Indicadores';
 import { PrivateRoute } from './components/PrivateRoute';
 import { Layout } from './components/Layout';
 import './App.css';
@@ -24,6 +25,7 @@ function App() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/ocorrencias/nova" element={<NovaOcorrencia />} />
         <Route path="/ocorrencias/:id" element={<DetalheOcorrencia />} />
+        <Route path="/indicadores" element={<Indicadores />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
