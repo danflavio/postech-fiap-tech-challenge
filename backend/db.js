@@ -18,12 +18,16 @@ export const pool = new Pool({
   port: Number(process.env.DB_PORT),
 });
 
-// Teste de conexão
-pool.query('SELECT NOW()', (err, res) => {
-  if (err) {
-    console.error('❌ Erro ao conectar ao PostgreSQL:', err.message);
-  } else {
-    console.log('✅ Conectado ao PostgreSQL com sucesso!');
-    console.log('🕐 PostgreSQL:', res.rows[0].now);
-  }
-});
+// Teste de conexão.
+// Em testes automatizados o pool é substituído por um mock (tests/dbMock.js),
+// então pulamos este probe para não abrir uma conexão real desnecessária.
+if (!process.env.NODE_TEST_CONTEXT) {
+  pool.query('SELECT NOW()', (err, res) => {
+    if (err) {
+      console.error('❌ Erro ao conectar ao PostgreSQL:', err.message);
+    } else {
+      console.log('✅ Conectado ao PostgreSQL com sucesso!');
+      console.log('🕐 PostgreSQL:', res.rows[0].now);
+    }
+  });
+}

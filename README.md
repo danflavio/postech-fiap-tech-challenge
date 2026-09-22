@@ -77,7 +77,7 @@ postech-fiap-tech-challenge/
 │   ├── controllers/        # Regras de negócio (auth, ocorrências, comentários, indicadores)
 │   ├── middlewares/        # authenticateToken (JWT) e authorizePerfil (cargo)
 │   ├── routes/             # Definição dos endpoints
-│   ├── tests/              # Testes dos middlewares (node:test)
+│   ├── tests/              # Testes de middlewares e controllers (node:test)
 │   ├── db.js               # Pool de conexões do PostgreSQL
 │   ├── index.js            # Servidor Express
 │   ├── init.sql            # Criação das tabelas/enums
@@ -268,11 +268,19 @@ Toda mudança de status grava um registro em `historico_ocorrencias` com: **stat
 
 ## Testes
 
-Testes mínimos das regras de segurança (middlewares), sem dependência de banco:
+Testes automatizados com o runner nativo do Node (`node:test`), **sem dependência de banco de dados**:
 
 ```bash
 cd backend
 npm test
 ```
 
-Cobrem: token ausente/inválido/válido em `authenticateToken` e as regras de cargo em `authorizePerfil`.
+**Cobertura (37 casos):**
+
+- **Middlewares de segurança** (`authMiddleware`, `authorizePerfil`): token ausente/inválido/válido e regras de cargo.
+- **`authController`**: cadastro (campos obrigatórios, e-mail duplicado, senha gravada como hash bcrypt) e login (credenciais inválidas, geração de JWT).
+- **`ocorrenciaController`**: criação (validação, prioridade padrão, histórico inicial), listagem (isolamento do solicitante, filtros do gestor), detalhe (ownership e 404), atualização de status (histórico só em mudança real) e avaliação (nota 1–5, só dono, só "Resolvida", avaliação única).
+- **`comentarioController`**: validação, 404, ownership e comentário do gestor.
+- **`indicadoresController`**: agregações e tratamento de erro.
+
+**Como funciona o mock do banco:** os controllers usam o `pool` do PostgreSQL. Em teste, o helper `tests/dbMock.js` substitui `pool.query` por um fake programável (mesma instância do objeto), e `db.js` pula o probe de conexão quando `NODE_TEST_CONTEXT` está definido — ou seja, nenhum acesso real ao banco é feito.
