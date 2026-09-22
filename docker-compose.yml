@@ -1,22 +1,63 @@
-version: '3.8'
-
 services:
+  # ---------- Banco de dados ----------
   db:
     image: postgres:15-alpine
     container_name: resolve_ai_db
     restart: always
-
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
-
     ports:
       - "${DB_PORT}:5432"
-
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+    # Healthcheck: o compose só considera o db "healthy" quando o Postgres
+    # está pronto para aceitar conexões. O backend espera por isso.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ---------- Backend (API Node/Express) ----------
+  backend:
+    build: ./backend
+    container_name: resolve_ai_backend
+    restart: always
+    environment:
+      # Dentro da rede do compose, o host do banco é o NOME do serviço: "db".
+      DB_HOST: db
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_PORT: 5432
+      JWT_SECRET: ${JWT_SECRET}
+      PORT: 3100
+    depends_on:
+      db:
+        condition: service_healthy
+    # Expõe a porta no host apenas para debug/testes diretos da API.
+    # O frontend NÃO usa esta porta: ele fala com o backend pela rede interna.
+    # BACKEND_PORT permite trocar a porta do host se a 3100 já estiver em uso
+    # (ex.: um backend rodando localmente fora do Docker). Default: 3100.
+    ports:
+      - "${BACKEND_PORT:-3100}:3100"
+
+  # ---------- Frontend (React compilado + Nginx) ----------
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # A API é acessada via /api (proxy do Nginx), mesma origem.
+        VITE_API_URL: /api
+    container_name: resolve_ai_frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
 
 volumes:
   pgdata: {}

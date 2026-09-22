@@ -1,8 +1,12 @@
 import pg from 'pg';
 import dotenv from 'dotenv';
 
-// Carrega as variáveis do .env
+// Fora do Docker: carrega as variáveis do .env da raiz do projeto.
+// Dentro do Docker: as variáveis vêm do ambiente (compose) e o dotenv
+// simplesmente não encontra o arquivo — o que é inofensivo, pois o
+// dotenv NUNCA sobrescreve variáveis já definidas no process.env.
 dotenv.config({ path: '../.env' });
+dotenv.config(); // fallback: .env no diretório atual, se existir
 
 const { Pool } = pg;
 

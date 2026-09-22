@@ -6,6 +6,7 @@ import authRoutes from './routes/authRoutes.js';
 import ocorrenciaRoutes from './routes/ocorrenciaRoutes.js';
 
 dotenv.config({ path: '../.env' });
+dotenv.config(); // fallback: dentro do container as variáveis vêm do ambiente
 
 const app = express();
 const PORT = process.env.PORT || 3100;

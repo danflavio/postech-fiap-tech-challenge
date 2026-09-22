@@ -55,15 +55,17 @@ Plataforma Full Stack (MVP) para **gestão de ocorrências** em condomínios, em
 ## Arquitetura
 
 ```
-   NAVEGADOR (React)              SERVIDOR (Node/Express)           BANCO (PostgreSQL)
-  ┌─────────────────┐            ┌────────────────────┐          ┌──────────────────┐
-  │  React + Vite   │   HTTP     │  Express + JWT     │   SQL    │  PostgreSQL 15   │
-  │  :5173          │ ─JSON────► │  :3100             │ ───────► │  :5432           │
-  │                 │ ◄──JSON─── │                    │ ◄─────── │                  │
-  └─────────────────┘            └────────────────────┘          └──────────────────┘
+   NAVEGADOR                     NGINX (frontend)                 SERVIDOR (Node/Express)        BANCO (PostgreSQL)
+  ┌─────────────────┐          ┌────────────────────┐           ┌────────────────────┐        ┌──────────────────┐
+  │  React (build)  │  HTTP    │  Nginx :80 (:8080) │  /api →    │  Express + JWT     │  SQL   │  PostgreSQL 15   │
+  │  servido pelo   │ ───────► │  - serve estáticos │ ─proxy──►  │  :3100             │ ─────► │  :5432           │
+  │  Nginx          │ ◄─────── │  - proxy /api      │ ◄───────── │                    │ ◄───── │                  │
+  └─────────────────┘          └────────────────────┘           └────────────────────┘        └──────────────────┘
 ```
 
-Fluxo de uma requisição: `React` → `axios (services/api.js)` → `Express (routes)` → `middlewares` (JWT/perfil) → `controller` → `SQL` → resposta JSON → `React` atualiza o estado.
+No Docker, o navegador acessa o Nginx em `http://localhost:8080`. Chamadas a `/api/*` são encaminhadas pelo Nginx ao serviço `backend` na rede interna do Compose (sem CORS, pois é a mesma origem). No modo manual (dev), o React roda no Vite (`:5173`) e chama a API direto em `:3100`.
+
+Fluxo de uma requisição: `React` → `axios (services/api.js)` → `Nginx (proxy /api)` → `Express (routes)` → `middlewares` (JWT/perfil) → `controller` → `SQL` → resposta JSON → `React` atualiza o estado.
 
 ---
 
@@ -79,15 +81,18 @@ postech-fiap-tech-challenge/
 │   ├── db.js               # Pool de conexões do PostgreSQL
 │   ├── index.js            # Servidor Express
 │   ├── init.sql            # Criação das tabelas/enums
-│   └── seed.js             # Popula o banco com dados de exemplo
+│   ├── seed.js             # Popula o banco com dados de exemplo
+│   └── Dockerfile          # Imagem de produção do backend (Node)
 ├── frontend/
-│   └── src/
-│       ├── components/     # Navbar, Layout, PrivateRoute
-│       ├── context/        # AuthContext / AuthProvider
-│       ├── hooks/          # useAuth
-│       ├── pages/          # Login, Cadastro, Dashboard, NovaOcorrencia, Detalhe, Indicadores
-│       └── services/       # api.js (axios) e ocorrencias.js
-├── docker-compose.yml      # PostgreSQL
+│   ├── src/
+│   │   ├── components/     # Navbar, Layout, PrivateRoute
+│   │   ├── context/        # AuthContext / AuthProvider
+│   │   ├── hooks/          # useAuth
+│   │   ├── pages/          # Login, Cadastro, Dashboard, NovaOcorrencia, Detalhe, Indicadores
+│   │   └── services/       # api.js (axios) e ocorrencias.js
+│   ├── Dockerfile          # Build multi-stage (Vite) + Nginx
+│   └── nginx.conf          # Serve a SPA e faz proxy de /api → backend
+├── docker-compose.yml      # PostgreSQL + backend + frontend (Nginx)
 └── .env.example            # Modelo de variáveis de ambiente
 ```
 
@@ -96,38 +101,61 @@ postech-fiap-tech-challenge/
 ## Como rodar
 
 ### Pré-requisitos
-- Node.js 18+
-- Docker + Docker Compose
+- Docker + Docker Compose (v2)
+- (Apenas para o modo manual) Node.js 18+
 
-### 1. Variáveis de ambiente
+### Variáveis de ambiente
 Na raiz do projeto, copie o modelo e ajuste os valores:
 
 ```bash
 cp .env.example .env
 ```
 
-### 2. Banco de dados (PostgreSQL)
-```bash
-docker compose up -d
-```
-Na primeira execução, o `backend/init.sql` cria automaticamente as tabelas e os enums.
+### Opção 1 — Tudo no Docker (recomendado)
 
-### 3. Backend
+Um único comando compila e sobe **banco + backend + frontend**:
+
 ```bash
+docker compose up --build
+```
+
+O que acontece:
+- O **PostgreSQL** sobe primeiro; na primeira execução, o `backend/init.sql` cria tabelas e enums. Um *healthcheck* garante que o banco só é considerado pronto quando aceita conexões.
+- O **backend** (Node/Express) só inicia depois que o banco está saudável (`depends_on: service_healthy`).
+- O **frontend** é compilado (`npm run build`) e servido por **Nginx**, que também faz proxy de `/api` para o backend.
+
+Acesse:
+- Frontend: **http://localhost:8080**
+- API (acesso direto, opcional): **http://localhost:3100**
+
+Popular o banco com dados de exemplo (seed), com os containers no ar:
+
+```bash
+docker compose exec backend npm run seed
+```
+
+> O seed é executado **manualmente e de forma explícita** porque ele recria os dados (`TRUNCATE`). Assim um `docker compose up` não apaga o banco a cada reinício.
+
+Para parar tudo: `docker compose down` (adicione `-v` para apagar também o volume do banco).
+
+### Opção 2 — Modo manual (desenvolvimento)
+
+Sobe só o banco no Docker e roda backend/frontend localmente (hot reload):
+
+```bash
+docker compose up -d db      # apenas o PostgreSQL
+
 cd backend
 npm install
-npm run seed   # (opcional) popula o banco com dados de exemplo
-npm run dev    # inicia em http://localhost:3100
-```
+npm run seed   # (opcional) popula o banco
+npm run dev    # http://localhost:3100
 
-### 4. Frontend
-```bash
-cd frontend
+cd ../frontend
 npm install
-npm run dev    # inicia em http://localhost:5173
+npm run dev    # http://localhost:5173
 ```
 
-Acesse `http://localhost:5173`.
+> No modo manual, `DB_HOST` deve ser `localhost`. No Docker, o host do banco é o nome do serviço (`db`), definido no próprio `docker-compose.yml`.
 
 ---
 
