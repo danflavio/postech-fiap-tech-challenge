@@ -11,13 +11,14 @@ import { adicionarComentario } from '../controllers/comentarioController.js';
 import { obterIndicadores } from '../controllers/indicadoresController.js';
 import { authenticateToken } from '../middlewares/authMiddleware.js';
 import { authorizePerfil } from '../middlewares/authorizePerfil.js';
+import { uploadImagem } from '../middlewares/upload.js';
 
 const router = express.Router();
 
 // Protege todas as rotas
 router.use(authenticateToken);
 
-router.post('/', criarOcorrencia);
+router.post('/', uploadImagem, criarOcorrencia);
 router.get('/', listarOcorrencias);
 
 // Indicadores (somente gestor) — deve vir ANTES de '/:id'

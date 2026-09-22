@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { criarOcorrencia } from '../services/ocorrencias';
 
@@ -13,6 +13,7 @@ const PRIORIDADES = ['Baixa', 'Média', 'Alta', 'Urgente'];
 
 export const NovaOcorrencia = () => {
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
 
   const [form, setForm] = useState({
     titulo: '',
@@ -20,13 +21,40 @@ export const NovaOcorrencia = () => {
     categoria: 'Infraestrutura',
     localizacao: '',
     prioridade: 'Média',
-    imagem_url: '',
   });
+  const [imagem, setImagem] = useState(null);
+  const [preview, setPreview] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0] || null;
+    setImagem(file);
+
+    if (preview) {
+      URL.revokeObjectURL(preview);
+    }
+
+    if (file) {
+      setPreview(URL.createObjectURL(file));
+    } else {
+      setPreview('');
+    }
+  };
+
+  const handleRemoverImagem = () => {
+    setImagem(null);
+    if (preview) {
+      URL.revokeObjectURL(preview);
+      setPreview('');
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -35,8 +63,16 @@ export const NovaOcorrencia = () => {
     setLoading(true);
 
     try {
-      const { data } = await criarOcorrencia(form);
-      navigate(`/ocorrencias/${data.ocorrencia.id}`);
+      const data = new FormData();
+      Object.entries(form).forEach(([key, value]) => {
+        data.append(key, value);
+      });
+      if (imagem) {
+        data.append('imagem', imagem);
+      }
+
+      const response = await criarOcorrencia(data);
+      navigate(`/ocorrencias/${response.data.ocorrencia.id}`);
     } catch (err) {
       setError(err.response?.data?.message || 'Erro ao registrar ocorrência.');
     } finally {
@@ -113,14 +149,23 @@ export const NovaOcorrencia = () => {
         </label>
 
         <label>
-          URL da imagem (opcional)
+          Imagem (opcional)
           <input
-            type="url"
-            name="imagem_url"
-            value={form.imagem_url}
-            onChange={handleChange}
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            onChange={handleFileChange}
           />
         </label>
+
+        {preview && (
+          <div className="preview-imagem">
+            <img src={preview} alt="Pré-visualização da imagem" />
+            <button type="button" className="btn-secundario" onClick={handleRemoverImagem}>
+              Remover imagem
+            </button>
+          </div>
+        )}
 
         <button type="submit" disabled={loading}>
           {loading ? 'Registrando...' : 'Registrar ocorrência'}

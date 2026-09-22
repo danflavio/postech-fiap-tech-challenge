@@ -1,4 +1,18 @@
 import { pool } from '../db.js';
+import cloudinary from '../config/cloudinary.js';
+
+// Envia o buffer da imagem para o Cloudinary e devolve a URL pública.
+const uploadImagemCloudinary = (buffer) =>
+  new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: 'resolveai' },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      },
+    );
+    stream.end(buffer);
+  });
 
 // 1. Criar Ocorrência (Solicitante)
 export const criarOcorrencia = async (req, res) => {
@@ -14,12 +28,25 @@ export const criarOcorrencia = async (req, res) => {
       });
     }
 
+    // Se veio um arquivo (multipart/form-data), envia ao Cloudinary.
+    // Caso contrário, mantém a URL informada no corpo da requisição.
+    let imagemFinal = imagem_url || null;
+    if (req.file) {
+      try {
+        const resultado = await uploadImagemCloudinary(req.file.buffer);
+        imagemFinal = resultado.secure_url;
+      } catch (error) {
+        console.error('Erro ao enviar imagem ao Cloudinary:', error);
+        return res.status(500).json({ message: 'Erro ao enviar a imagem.' });
+      }
+    }
+
     // Insere a ocorrência no banco
     const newOcorrencia = await pool.query(
       `INSERT INTO ocorrencias (titulo, descricao, categoria, localizacao, imagem_url, prioridade, solicitante_id)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
-      [titulo, descricao, categoria, localizacao, imagem_url || null, prioridade || 'Média', solicitante_id],
+       [titulo, descricao, categoria, localizacao, imagemFinal, prioridade || 'Média', solicitante_id],
     );
 
     const ocorrenciaCriada = newOcorrencia.rows[0];

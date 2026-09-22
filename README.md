@@ -170,6 +170,9 @@ npm run dev    # http://localhost:5173
 | `DB_PORT` | Porta do banco | `5432` |
 | `JWT_SECRET` | Chave para assinar os tokens JWT | (string longa e aleatória) |
 | `PORT` | Porta do backend (opcional) | `3100` |
+| `CLOUDINARY_CLOUD_NAME` | Cloud name do Cloudinary (upload de imagens) | `meu_cloud` |
+| `CLOUDINARY_API_KEY` | API key do Cloudinary | `1234567890` |
+| `CLOUDINARY_API_SECRET` | API secret do Cloudinary | (secret do painel) |
 | `VITE_API_URL` | URL da API usada pelo frontend | `http://localhost:3100` |
 
 > O frontend usa `VITE_API_URL` se estiver definida em `frontend/.env`; caso contrário, usa `http://localhost:3100` como padrão.
@@ -208,7 +211,7 @@ Todas exigem `Authorization: Bearer <token>`.
 | Método | Rota | Acesso | Descrição |
 |---|---|---|---|
 | GET | `/ocorrencias` | Autenticado | Lista ocorrências. Solicitante vê as suas; gestor vê todas. Filtros: `?status=&categoria=&prioridade=` |
-| POST | `/ocorrencias` | Autenticado | Cria ocorrência (`titulo`, `descricao`, `categoria`, `localizacao`, `imagem_url`, `prioridade`) |
+| POST | `/ocorrencias` | Autenticado | Cria ocorrência (`titulo`, `descricao`, `categoria`, `localizacao`, `prioridade`). Aceita `multipart/form-data` com arquivo opcional no campo `imagem` (enviado ao Cloudinary); alternativamente `imagem_url` em JSON |
 | GET | `/ocorrencias/indicadores` | Gestor | Indicadores agregados (status, prioridade, categoria, média de avaliações) |
 | GET | `/ocorrencias/:id` | Autenticado | Detalhe + histórico + comentários. Solicitante só acessa as próprias |
 | PATCH | `/ocorrencias/:id/status` | Gestor | Atualiza `novo_status`, `prioridade`, `solucao_aplicada`, `observacao` (gera histórico) |

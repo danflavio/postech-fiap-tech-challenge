@@ -26,6 +26,22 @@ app.get('/', (req, res) => {
     });
 });
 
+// Tratamento global de erros (inclui erros do multer no upload de imagem).
+app.use((err, req, res, next) => {
+    if (err.name === 'MulterError') {
+        const mensagem =
+            err.code === 'LIMIT_FILE_SIZE'
+                ? 'Imagem muito grande (máximo 5 MB).'
+                : err.message;
+        return res.status(400).json({ message: mensagem });
+    }
+    if (err.message === 'Somente arquivos de imagem são permitidos.') {
+        return res.status(400).json({ message: err.message });
+    }
+    console.error(err);
+    res.status(500).json({ message: 'Erro interno no servidor.' });
+});
+
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
