@@ -16,3 +16,5 @@ export const avaliarOcorrencia = (id, data) =>
   api.post(`/ocorrencias/${id}/avaliacao`, data);
 
 export const obterIndicadores = () => api.get('/ocorrencias/indicadores');
+
+export const listarGestores = () => api.get('/ocorrencias/gestores');

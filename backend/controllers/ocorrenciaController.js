@@ -255,3 +255,20 @@ export const avaliarOcorrencia = async (req, res) => {
     res.status(500).json({ message: 'Erro interno no servidor.' });
   }
 };
+
+
+// 6. Listar Gestores (para atribuição de responsável — apenas Gestor)
+export const listarGestores = async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT id, nome
+       FROM usuarios
+       WHERE perfil = 'gestor'
+       ORDER BY nome ASC`,
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Erro ao listar gestores:', error);
+    res.status(500).json({ message: 'Erro interno no servidor.' });
+  }
+};

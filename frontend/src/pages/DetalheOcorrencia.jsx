@@ -6,6 +6,7 @@ import {
   Tag,
   Calendar,
   User as UserIcon,
+  UserCog,
   MessageSquare,
   CheckCircle2,
   Wrench,
@@ -16,6 +17,7 @@ import {
   adicionarComentario,
   atualizarStatus,
   avaliarOcorrencia,
+  listarGestores,
 } from '../services/ocorrencias';
 import { useAuth } from '../hooks/useAuth';
 
@@ -41,7 +43,9 @@ export const DetalheOcorrencia = () => {
     prioridade: '',
     observacao: '',
     solucao_aplicada: '',
+    gestor_id: '',
   });
+  const [gestores, setGestores] = useState([]);
   const [notaAvaliacao, setNotaAvaliacao] = useState(0);
   const [hoverNota, setHoverNota] = useState(0);
   const [comentarioAvaliacao, setComentarioAvaliacao] = useState('');
@@ -60,6 +64,7 @@ export const DetalheOcorrencia = () => {
           prioridade: data.prioridade,
           observacao: '',
           solucao_aplicada: data.solucao_aplicada || '',
+          gestor_id: data.gestor_id || '',
         });
         setError('');
       } catch {
@@ -75,6 +80,26 @@ export const DetalheOcorrencia = () => {
       active = false;
     };
   }, [id, reloadKey]);
+
+  // Carrega a lista de gestores para o seletor de responsável.
+  // Só chamamos a rota se o usuário for gestor (solicitante não tem acesso).
+  useEffect(() => {
+    if (!isGestor) return;
+    let active = true;
+
+    listarGestores()
+      .then(({ data }) => {
+        if (active) setGestores(data);
+      })
+      .catch(() => {
+        // Falha ao listar gestores não deve quebrar a página;
+        // o seletor apenas fica sem opções extras.
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [isGestor]);
 
   const handleComentar = async (e) => {
     e.preventDefault();
@@ -198,6 +223,12 @@ export const DetalheOcorrencia = () => {
           <UserIcon size={15} />
           {ocorrencia.solicitante_nome}
         </span>
+        {ocorrencia.gestor_nome && (
+          <span>
+            <UserCog size={15} />
+            Responsável: {ocorrencia.gestor_nome}
+          </span>
+        )}
         <span>
           <Calendar size={15} />
           {new Date(ocorrencia.criado_em).toLocaleString('pt-BR')}
@@ -329,6 +360,22 @@ export const DetalheOcorrencia = () => {
                 </select>
               </label>
             </div>
+
+            <label>
+              Responsável
+              <select
+                name="gestor_id"
+                value={gestorForm.gestor_id}
+                onChange={handleGestorChange}
+              >
+                <option value="">Sem responsável definido</option>
+                {gestores.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.nome}
+                  </option>
+                ))}
+              </select>
+            </label>
 
             <label>
               Observação
