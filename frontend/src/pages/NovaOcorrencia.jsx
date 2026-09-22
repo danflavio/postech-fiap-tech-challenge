@@ -1,6 +1,7 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { criarOcorrencia } from '../services/ocorrencias';
+import { comprimirImagem, formatarBytes } from '../utils/comprimirImagem';
 
 const CATEGORIAS = [
   'Infraestrutura',
@@ -24,34 +25,67 @@ export const NovaOcorrencia = () => {
   });
   const [imagem, setImagem] = useState(null);
   const [preview, setPreview] = useState('');
+  const [infoImagem, setInfoImagem] = useState('');
+  const [comprimindo, setComprimindo] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const previewRef = useRef('');
+
+  useEffect(
+    () => () => {
+      if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+    },
+    [],
+  );
+
+  const definirPreview = (url) => {
+    if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+    previewRef.current = url;
+    setPreview(url);
+  };
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files?.[0] || null;
-    setImagem(file);
 
-    if (preview) {
-      URL.revokeObjectURL(preview);
+    if (!file) {
+      definirPreview('');
+      setImagem(null);
+      setInfoImagem('');
+      return;
     }
 
-    if (file) {
-      setPreview(URL.createObjectURL(file));
-    } else {
-      setPreview('');
+    // Mostra a original imediatamente e comprime em segundo plano.
+    definirPreview(URL.createObjectURL(file));
+    setImagem(file);
+    setInfoImagem(`Imagem: ${formatarBytes(file.size)}`);
+    setComprimindo(true);
+
+    try {
+      const comprimida = await comprimirImagem(file);
+      setImagem(comprimida);
+
+      if (comprimida !== file) {
+        definirPreview(URL.createObjectURL(comprimida));
+        setInfoImagem(
+          `Imagem otimizada: ${formatarBytes(file.size)} → ${formatarBytes(comprimida.size)}`,
+        );
+      }
+    } catch {
+      setInfoImagem(`Imagem: ${formatarBytes(file.size)}`);
+    } finally {
+      setComprimindo(false);
     }
   };
 
   const handleRemoverImagem = () => {
     setImagem(null);
-    if (preview) {
-      URL.revokeObjectURL(preview);
-      setPreview('');
-    }
+    definirPreview('');
+    setInfoImagem('');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -161,14 +195,19 @@ export const NovaOcorrencia = () => {
         {preview && (
           <div className="preview-imagem">
             <img src={preview} alt="Pré-visualização da imagem" />
+            {infoImagem && <small className="upload-info">{infoImagem}</small>}
             <button type="button" className="btn-secundario" onClick={handleRemoverImagem}>
               Remover imagem
             </button>
           </div>
         )}
 
-        <button type="submit" disabled={loading}>
-          {loading ? 'Registrando...' : 'Registrar ocorrência'}
+        <button type="submit" disabled={loading || comprimindo}>
+          {loading
+            ? 'Registrando...'
+            : comprimindo
+              ? 'Otimizando imagem...'
+              : 'Registrar ocorrência'}
         </button>
       </form>
     </div>

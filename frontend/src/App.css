@@ -731,6 +731,11 @@
   border: 1px solid var(--border);
 }
 
+.upload-info {
+  font-size: 13px;
+  color: var(--text);
+}
+
 .form-card .btn-secundario {
   margin-top: 0;
   padding: 8px 14px;
