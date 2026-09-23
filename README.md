@@ -11,6 +11,7 @@ Plataforma Full Stack (MVP) para **gestão de ocorrências** em condomínios, em
 - [Arquitetura](#arquitetura)
 - [Estrutura de pastas](#estrutura-de-pastas)
 - [Como rodar](#como-rodar)
+- [Deploy (Cloud)](#deploy-cloud)
 - [Variáveis de ambiente](#variáveis-de-ambiente)
 - [Usuários de teste (seed)](#usuários-de-teste-seed)
 - [API](#api)
@@ -159,6 +160,67 @@ npm run dev    # http://localhost:5173
 
 ---
 
+## Deploy (Cloud)
+
+A aplicação está publicada em **serviços gratuitos**, cada um com uma responsabilidade:
+
+```
+   NAVEGADOR
+      │
+      ▼
+  VERCEL (frontend)          RENDER (backend)           NEON (PostgreSQL)
+  React compilado    HTTPS   Express + JWT      SQL/TLS  Postgres gerenciado
+  *.vercel.app  ──────────►  *.onrender.com  ─────────►  nuvem
+                                   │
+                                   └──► CLOUDINARY (imagens: guarda só a URL)
+
+  Domínios diferentes (Vercel ≠ Render) → CORS restrito via CORS_ORIGIN
+```
+
+| Camada | Provedor | Endereço |
+|---|---|---|
+| Frontend | Vercel | https://postech-fiap-tech-challenge.vercel.app |
+| API | Render | https://resolve-ai-backend-g2j5.onrender.com |
+| Banco | Neon | connection string **pooled**, via `DATABASE_URL` |
+| Imagens | Cloudinary | plano gratuito |
+
+> Verificação rápida da API: `GET /` retorna `{ "message": "API Resolve Aí rodando com sucesso!" }`.
+
+### Diferenças em relação ao Docker local
+- **Não há Nginx** fazendo proxy: o frontend chama a API **direto**, pela URL absoluta definida em `VITE_API_URL`.
+- Frontend e API ficam em **domínios diferentes** (Vercel ≠ Render), então o **CORS** importa → restringimos com `CORS_ORIGIN`.
+- O banco é gerenciado e **exige TLS** → o `db.js` liga o SSL automaticamente quando `DATABASE_URL` está definida.
+
+### Variáveis de ambiente de produção
+| Onde | Variável | Valor |
+|---|---|---|
+| Render | `DATABASE_URL` | connection string **pooled** do Neon |
+| Render | `JWT_SECRET` | chave longa e aleatória |
+| Render | `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` | credenciais do Cloudinary |
+| Render | `CORS_ORIGIN` | `https://postech-fiap-tech-challenge.vercel.app` |
+| Vercel | `VITE_API_URL` | `https://resolve-ai-backend-g2j5.onrender.com` |
+
+> No **Render** use **Root Directory = `backend`** (o `package.json` fica nessa subpasta), runtime **Node**, build `npm install` e start `npm start`. No **Vercel** use **Root Directory = `frontend`** com preset **Vite**.
+
+### Passo a passo (resumo)
+1. **Neon** — criar o projeto, rodar o `backend/init.sql` no SQL Editor e popular o banco apontando o seed para o Neon:
+   ```powershell
+   cd backend
+   $env:DATABASE_URL='<connection string pooled>'; npm run seed
+   Remove-Item Env:DATABASE_URL
+   ```
+2. **Render** — *Web Service* do repositório: Root Directory `backend`, runtime Node, build `npm install`, start `npm start`, plano **Free**, e as variáveis da tabela acima.
+3. **Vercel** — *Project* do repositório: Root Directory `frontend`, preset **Vite**, variável `VITE_API_URL` com a URL do Render.
+4. **CORS** — definir `CORS_ORIGIN` no Render com a URL do Vercel (aceita lista separada por vírgula).
+
+> O deploy é automático a cada `git push` na branch `master`: o Render rebuilda o backend e o Vercel rebuilda o frontend.
+
+### Observações do plano gratuito
+- O **Render free** "dorme" após ~15 min ociosos; a **primeira** requisição pode levar ~50 s. Para a demo, um *uptime pinger* gratuito (ex.: cron-job.org) chamando `GET /` a cada 10–14 min mantém o serviço acordado.
+- O **Neon free** suspende o *compute* quando ocioso, mas acorda em milissegundos.
+
+---
+
 ## Variáveis de ambiente
 
 | Variável | Descrição | Exemplo |
@@ -175,7 +237,7 @@ npm run dev    # http://localhost:5173
 | `CLOUDINARY_API_SECRET` | API secret do Cloudinary | (secret do painel) |
 | `VITE_API_URL` | URL da API usada pelo frontend | `http://localhost:3100` |
 
-> O frontend usa `VITE_API_URL` se estiver definida em `frontend/.env`; caso contrário, usa `http://localhost:3100` como padrão.
+> O frontend usa `VITE_API_URL` (lida em tempo de build pelo Vite, do `.env` da raiz ou de variáveis de ambiente); na ausência dela, usa `http://localhost:3100` como padrão.
 
 ---
 
