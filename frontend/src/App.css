@@ -5,14 +5,27 @@
   gap: 16px;
   padding: 16px 32px;
   border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  position: sticky;
+  top: 0;
+  z-index: 20;
   text-align: left;
 }
 
 .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-size: 20px;
   font-weight: 700;
   color: var(--text-h);
   text-decoration: none;
+}
+
+.brand-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
 }
 
 .nav-user {
@@ -746,4 +759,43 @@
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+}
+
+/* =========================================================
+   Tema (claro/escuro) e acabamento
+   ========================================================= */
+
+/* Botão de alternância de tema — fica na navbar, à esquerda do "Sair". */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-h);
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  color: var(--accent);
+  border-color: var(--accent-border);
+  background: var(--accent-bg);
+}
+
+/* Os cartões são brancos (--bg); os campos dentro deles usam um tom
+   levemente diferente (--surface) para ganhar contraste nos dois temas. */
+.form-card input,
+.form-card select,
+.form-card textarea,
+.auth-card input,
+.auth-card select,
+.comentario-form textarea,
+.painel-gestor select,
+.painel-gestor textarea,
+.avaliacao textarea {
+  background: var(--surface);
 }

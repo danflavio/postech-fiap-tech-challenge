@@ -1,57 +1,84 @@
+/* =========================================================
+   TIPOGRAFIA (comum aos dois temas)
+   ========================================================= */
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
-
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
   --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
-
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
+/* =========================================================
+   TEMA CLARO — Solarized Light (Ethan Schoonover)
+   Paleta: base3 (creme) nos cartões, base2 na página,
+   texto base00/base02 e o azul Solarized como destaque.
+   https://ethanschoonover.com/solarized/
+   ========================================================= */
+:root,
+[data-theme='light'] {
+  --text: #657b83; /* base00 */
+  --text-h: #073642; /* base02 */
 
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
+  --bg: #fdf6e3; /* base3 — cartões, navbar, campos sobre cartão */
+  --surface: #eee8d5; /* base2 — fundo da página */
+  --code-bg: #eee8d5; /* base2 — painéis internos */
+
+  --border: #e3ddc9;
+
+  --accent: #268bd2; /* blue */
+  --accent-hover: #1f74af;
+  --accent-bg: rgba(38, 139, 210, 0.1);
+  --accent-border: rgba(38, 139, 210, 0.35);
+
+  --shadow:
+    rgba(101, 123, 131, 0.16) 0 10px 24px -14px,
+    rgba(101, 123, 131, 0.1) 0 2px 8px -3px;
+
+  color-scheme: light;
+}
+
+/* =========================================================
+   TEMA ESCURO — paleta oficial do Dracula.
+   https://draculatheme.com/contribute
+   ========================================================= */
+[data-theme='dark'] {
+  --text: #b8bccb;
+  --text-h: #f8f8f2;
+
+  --bg: #282a36; /* background */
+  --surface: #1e1f29; /* fundo da página (mais escuro) */
+  --code-bg: #343746; /* current line (mais claro) */
+
+  --border: #44475a; /* current line */
+
+  --accent: #bd93f9; /* purple */
+  --accent-hover: #d0b3ff;
+  --accent-bg: rgba(189, 147, 249, 0.15);
+  --accent-border: rgba(189, 147, 249, 0.5);
+
+  --shadow:
+    rgba(0, 0, 0, 0.5) 0 12px 28px -12px,
+    rgba(0, 0, 0, 0.35) 0 2px 10px -3px;
+
+  color-scheme: dark;
+}
+
+/* =========================================================
+   BASE
+   ========================================================= */
+html {
+  background: var(--surface);
 }
 
 body {
   margin: 0;
+  font: 16px/1.5 var(--sans);
+  letter-spacing: 0.1px;
+  background: var(--surface);
+  color: var(--text);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
@@ -59,7 +86,6 @@ body {
   max-width: 100%;
   margin: 0 auto;
   text-align: center;
-  border-inline: 1px solid var(--border);
   min-height: 100svh;
   display: flex;
   flex-direction: column;
@@ -69,28 +95,33 @@ body {
 h1,
 h2 {
   font-family: var(--heading);
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-h);
 }
 
 h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
+  font-size: 40px;
+  letter-spacing: -1px;
+  margin: 28px 0;
 }
+
 h2 {
   font-size: 24px;
   line-height: 118%;
-  letter-spacing: -0.24px;
+  letter-spacing: -0.2px;
   margin: 0 0 8px;
-  @media (max-width: 1024px) {
+}
+
+@media (max-width: 1024px) {
+  h1 {
+    font-size: 32px;
+    margin: 20px 0;
+  }
+  h2 {
     font-size: 20px;
   }
 }
+
 p {
   margin: 0;
 }
@@ -98,14 +129,23 @@ p {
 code,
 .counter {
   font-family: var(--mono);
-  display: inline-flex;
   border-radius: 4px;
   color: var(--text-h);
 }
 
 code {
-  font-size: 15px;
+  font-size: 14px;
   line-height: 135%;
   padding: 4px 8px;
   background: var(--code-bg);
+}
+
+/* Troca de tema suave em todos os elementos. */
+*,
+*::before,
+*::after {
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
 }

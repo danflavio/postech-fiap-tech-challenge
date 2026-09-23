@@ -1,10 +1,28 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <meta
+      name="description"
+      content="Resolve Aí — plataforma de gestão de ocorrências."
+    />
+    <title>Resolve Aí</title>
+    <script>
+      // Define o tema ANTES da primeira pintura para evitar "flash" de tema errado.
+      // Preferência: valor salvo pelo usuário > preferência do sistema > claro.
+      (function () {
+        try {
+          var salvo = localStorage.getItem('theme');
+          var prefereEscuro = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var tema = salvo || (prefereEscuro ? 'dark' : 'light');
+          document.documentElement.setAttribute('data-theme', tema);
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

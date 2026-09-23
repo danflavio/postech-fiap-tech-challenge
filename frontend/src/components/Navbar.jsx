@@ -1,6 +1,7 @@
 import { Link, NavLink } from 'react-router-dom';
 import { LogOut, User } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { ThemeToggle } from './ThemeToggle';
 
 export const Navbar = () => {
   const { user, logout } = useAuth();
@@ -8,6 +9,7 @@ export const Navbar = () => {
   return (
     <nav className="navbar">
       <Link to="/" className="brand">
+        <img src="/favicon.svg" alt="" className="brand-mark" />
         Resolve Aí
       </Link>
 
@@ -25,6 +27,8 @@ export const Navbar = () => {
               <User size={16} />
               {user.nome} · {user.perfil}
             </span>
+
+            <ThemeToggle />
 
             <button type="button" className="btn-ghost" onClick={logout}>
               <LogOut size={16} />
