@@ -11,7 +11,16 @@ dotenv.config(); // fallback: dentro do container as variáveis vêm do ambiente
 const app = express();
 const PORT = process.env.PORT || 3100;
 
-app.use(cors());
+// CORS: em produção o frontend (Vercel) e a API (Render) ficam em domínios
+// diferentes, então o navegador exige CORS. Definimos as origens permitidas
+// em CORS_ORIGIN (separadas por vírgula). Se a variável não existir, mantemos
+// o comportamento aberto anterior — útil para o Docker/dev local.
+const origensPermitidas = (process.env.CORS_ORIGIN || '')
+    .split(',')
+    .map((origem) => origem.trim())
+    .filter(Boolean);
+
+app.use(cors(origensPermitidas.length > 0 ? { origin: origensPermitidas } : undefined));
 app.use(express.json());
 
 // Registra as rotas de autenticação

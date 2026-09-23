@@ -10,13 +10,32 @@ dotenv.config(); // fallback: .env no diretório atual, se existir
 
 const { Pool } = pg;
 
-export const pool = new Pool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: Number(process.env.DB_PORT),
-});
+// Conexão com o banco. Duas formas aceitas:
+//   1) DATABASE_URL -> string única (banco gerenciado: Neon, Render, Supabase)
+//   2) DB_HOST/DB_USER/... -> variáveis separadas (Postgres local / Docker)
+const connection = process.env.DATABASE_URL
+  ? { connectionString: process.env.DATABASE_URL }
+  : {
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
+      port: Number(process.env.DB_PORT),
+    };
+
+// Bancos gerenciados exigem TLS. Ligamos o SSL quando:
+//   - DB_SSL=true (explícito), ou
+//   - existe DATABASE_URL e DB_SSL não foi desligado (padrão dos clouds).
+// No Docker local usamos variáveis separadas, então segue sem SSL.
+const usarSSL =
+  process.env.DB_SSL === 'true' ||
+  (Boolean(process.env.DATABASE_URL) && process.env.DB_SSL !== 'false');
+
+if (usarSSL) {
+  connection.ssl = { rejectUnauthorized: false };
+}
+
+export const pool = new Pool(connection);
 
 // Teste de conexão.
 // Em testes automatizados o pool é substituído por um mock (tests/dbMock.js),
