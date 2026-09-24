@@ -25,7 +25,9 @@ export const Navbar = () => {
           <div className="nav-user">
             <span className="nav-profile">
               <User size={16} />
-              {user.nome} · {user.perfil}
+              <span className="nav-profile-text">
+                {user.nome} · {user.perfil}
+              </span>
             </span>
 
             <ThemeToggle />
